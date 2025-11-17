@@ -4,11 +4,23 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub opacity: f32,       // 0.0 - 0.8
+    pub opacity: f32,       // 0.0 - 1.0 (0% - 100%)
     pub enabled: bool,
     pub auto_start: bool,
     #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(default = "default_animation_duration")]
+    pub animation_duration: u64,  // 动画时长（毫秒），0 表示无动画
+    #[serde(default = "default_language")]
+    pub language: String,         // "zh" 或 "en"
+}
+
+fn default_animation_duration() -> u64 {
+    300 // 默认 300ms 动画
+}
+
+fn default_language() -> String {
+    "zh".to_string() // 默认中文
 }
 
 fn default_theme() -> String {
@@ -22,6 +34,8 @@ impl Default for AppConfig {
             enabled: true,
             auto_start: false,
             theme: "auto".to_string(),
+            animation_duration: 300,
+            language: "zh".to_string(),
         }
     }
 }
@@ -92,7 +106,19 @@ impl ConfigManager {
     /// 更新单个字段
     pub fn update_opacity(&self, opacity: f32) -> Result<(), Box<dyn std::error::Error>> {
         let mut config = self.load();
-        config.opacity = opacity.clamp(0.0, 0.8);
+        config.opacity = opacity.clamp(0.0, 1.0);
+        self.save(&config)
+    }
+    
+    pub fn update_animation_duration(&self, duration: u64) -> Result<(), Box<dyn std::error::Error>> {
+        let mut config = self.load();
+        config.animation_duration = duration;
+        self.save(&config)
+    }
+    
+    pub fn update_language(&self, language: String) -> Result<(), Box<dyn std::error::Error>> {
+        let mut config = self.load();
+        config.language = language;
         self.save(&config)
     }
 

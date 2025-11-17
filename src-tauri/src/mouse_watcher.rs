@@ -1,5 +1,4 @@
 use crate::monitor::MonitorInfo;
-use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -69,7 +68,7 @@ fn get_mouse_position_windows() -> Option<MousePosition> {
     
     unsafe {
         let mut point = POINT { x: 0, y: 0 };
-        if GetCursorPos(&mut point).as_bool() {
+        if GetCursorPos(&mut point).is_ok() {
             return Some(MousePosition {
                 x: point.x,
                 y: point.y,

@@ -9,10 +9,10 @@ mod tray;
 
 use config::{AppConfig, ConfigManager};
 use monitor::{get_monitors, normalize_layout, MonitorInfo, UIRect};
-use mouse_watcher::{get_mouse_position, start_mouse_watcher};
+use mouse_watcher::start_mouse_watcher;
 use overlay::{OverlayConfig, OverlayManager};
 use std::sync::{Arc, Mutex};
-use tauri::{Manager, State, Window};
+use tauri::{Manager, State};
 
 // 应用状态
 struct AppState {
@@ -63,19 +63,20 @@ fn update_opacity(opacity: f32, state: State<AppState>) -> Result<(), String> {
 #[tauri::command]
 fn update_enabled(enabled: bool, state: State<AppState>, app: tauri::AppHandle) -> Result<(), String> {
     let manager = state.config_manager.lock().unwrap();
+    let config = manager.load();
     manager
         .update_enabled(enabled)
         .map_err(|e| e.to_string())?;
 
     // 更新遮罩层
     if let Some(overlay_manager) = state.overlay_manager.lock().unwrap().as_ref() {
-        let mut config = overlay_manager.get_config();
-        config.enabled = enabled;
-        overlay_manager.update_config(config);
+        let mut overlay_config = overlay_manager.get_config();
+        overlay_config.enabled = enabled;
+        overlay_manager.update_config(overlay_config);
     }
 
-    // 更新托盘菜单
-    tray::update_tray_menu_text(&app, enabled);
+    // 更新托盘菜单（包含语言）
+    tray::update_tray_menu_text(&app, enabled, &config.language);
 
     Ok(())
 }
@@ -87,6 +88,39 @@ fn update_auto_start(auto_start: bool, state: State<AppState>) -> Result<(), Str
     manager
         .update_auto_start(auto_start)
         .map_err(|e| e.to_string())
+}
+
+// Tauri 命令：更新动画时长
+#[tauri::command]
+fn update_animation_duration(duration: u64, state: State<AppState>) -> Result<(), String> {
+    let manager = state.config_manager.lock().unwrap();
+    manager
+        .update_animation_duration(duration)
+        .map_err(|e| e.to_string())?;
+
+    // 更新遮罩层配置
+    if let Some(overlay_manager) = state.overlay_manager.lock().unwrap().as_ref() {
+        let mut config = overlay_manager.get_config();
+        config.animation_duration = duration;
+        overlay_manager.update_config(config);
+    }
+
+    Ok(())
+}
+
+// Tauri 命令：更新语言
+#[tauri::command]
+fn update_language(language: String, state: State<AppState>, app: tauri::AppHandle) -> Result<(), String> {
+    let manager = state.config_manager.lock().unwrap();
+    let config = manager.load();
+    manager
+        .update_language(language.clone())
+        .map_err(|e| e.to_string())?;
+    
+    // 更新托盘菜单语言
+    tray::update_tray_menu_text(&app, config.enabled, &language);
+    
+    Ok(())
 }
 
 // Tauri 命令：获取当前鼠标所在的显示器
@@ -115,7 +149,11 @@ fn main() {
             overlay_manager.update_config(OverlayConfig {
                 opacity: config.opacity,
                 enabled: config.enabled,
+                animation_duration: config.animation_duration,
             });
+
+            // 初始化托盘菜单文本
+            tray::update_tray_menu_text(&app.handle(), config.enabled, &config.language);
 
             let overlay_manager = Arc::new(Mutex::new(Some(overlay_manager)));
 
@@ -157,6 +195,8 @@ fn main() {
             update_opacity,
             update_enabled,
             update_auto_start,
+            update_animation_duration,
+            update_language,
             get_current_monitor,
         ])
         .on_window_event(|event| {

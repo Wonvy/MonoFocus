@@ -4,9 +4,9 @@ use tauri::{
 };
 
 pub fn create_tray() -> SystemTray {
-    let enable = CustomMenuItem::new("toggle".to_string(), "Disable Shield");
-    let settings = CustomMenuItem::new("settings".to_string(), "Settings");
-    let quit = CustomMenuItem::new("quit".to_string(), "Exit");
+    let enable = CustomMenuItem::new("toggle".to_string(), "护眼模式：开启");
+    let settings = CustomMenuItem::new("settings".to_string(), "设置");
+    let quit = CustomMenuItem::new("quit".to_string(), "退出");
 
     let tray_menu = SystemTrayMenu::new()
         .add_item(enable)
@@ -49,15 +49,32 @@ pub fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
     }
 }
 
-/// 更新托盘菜单项文本
-pub fn update_tray_menu_text(app: &AppHandle, enabled: bool) {
-    if let Some(tray) = app.tray_handle().get_item("toggle") {
-        let text = if enabled {
-            "Disable Shield"
+/// 更新托盘菜单项文本（根据状态和语言）
+pub fn update_tray_menu_text(app: &AppHandle, enabled: bool, language: &str) {
+    let toggle_tray = app.tray_handle().get_item("toggle");
+    let settings_tray = app.tray_handle().get_item("settings");
+    let quit_tray = app.tray_handle().get_item("quit");
+    
+    if language == "en" {
+        // 英文
+        let toggle_text = if enabled {
+            "Eye Care Mode: ON"
         } else {
-            "Enable Shield"
+            "Eye Care Mode: OFF"
         };
-        let _ = tray.set_title(text);
+        let _ = toggle_tray.set_title(toggle_text);
+        let _ = settings_tray.set_title("Settings");
+        let _ = quit_tray.set_title("Exit");
+    } else {
+        // 中文
+        let toggle_text = if enabled {
+            "护眼模式：开启"
+        } else {
+            "护眼模式：关闭"
+        };
+        let _ = toggle_tray.set_title(toggle_text);
+        let _ = settings_tray.set_title("设置");
+        let _ = quit_tray.set_title("退出");
     }
 }
 

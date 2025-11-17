@@ -19,6 +19,8 @@ pub struct UIRect {
     pub width: f32,
     pub height: f32,
     pub id: String,
+    pub resolution_width: i32,
+    pub resolution_height: i32,
 }
 
 /// 获取所有显示器信息
@@ -61,6 +63,8 @@ pub fn normalize_layout(monitors: &[MonitorInfo], container_width: f32, containe
             width: m.width as f32 * scale,
             height: m.height as f32 * scale,
             id: m.id.clone(),
+            resolution_width: m.width,
+            resolution_height: m.height,
         }
     }).collect()
 }

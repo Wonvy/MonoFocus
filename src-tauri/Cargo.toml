@@ -13,8 +13,7 @@ tauri-build = { version = "1.5", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.5", features = ["system-tray", "window-all", "window-create", "window-set-always-on-top", "window-set-decorations", "window-set-ignore-cursor-events", "window-set-position", "window-set-size", "window-start-dragging"] }
-tauri-plugin-store = { git = "https://github.com/tauri-apps/tauri-plugin-store", branch = "v1" }
+tauri = { version = "1.5", features = [ "window-close", "window-show", "window-center", "window-hide", "system-tray", "window-create", "window-set-always-on-top", "window-set-decorations", "window-set-ignore-cursor-events", "window-set-position", "window-set-size", "window-start-dragging"] }
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.51", features = [

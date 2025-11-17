@@ -4,7 +4,7 @@
     "beforeBuildCommand": "",
     "devPath": "../src",
     "distDir": "../src",
-    "withGlobalTauri": false
+    "withGlobalTauri": true
   },
   "package": {
     "productName": "MonoFocus",
@@ -48,8 +48,10 @@
         "fullscreen": false,
         "resizable": true,
         "title": "MonoFocus",
-        "width": 500,
-        "height": 400,
+        "width": 480,
+        "height": 620,
+        "minWidth": 440,
+        "minHeight": 580,
         "center": true,
         "decorations": true,
         "transparent": false
@@ -61,4 +63,3 @@
     }
   }
 }
-

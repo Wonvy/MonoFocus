@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -8,15 +8,9 @@
   </head>
   <body>
     <div class="container">
-      <!-- 顶部标题 -->
-      <header>
-        <h1>MonoFocus</h1>
-        <p class="subtitle">多显示器护眼与专注工具</p>
-      </header>
-
       <!-- 显示器布局可视化 -->
       <section class="monitor-section">
-        <canvas id="monitorCanvas" width="460" height="200"></canvas>
+        <canvas id="monitorCanvas" width="400" height="130"></canvas>
         <div id="monitorStatus" class="status-text">检测中...</div>
       </section>
 
@@ -25,8 +19,7 @@
         <!-- 护眼模式开关 -->
         <div class="control-item">
           <div class="control-label">
-            <span class="icon">👁️</span>
-            <span>护眼模式</span>
+            <span data-i18n="eyeCareMode">护眼模式</span>
           </div>
           <label class="switch">
             <input type="checkbox" id="enabledToggle" checked />
@@ -37,42 +30,69 @@
         <!-- 透明度滑条 -->
         <div class="control-item">
           <div class="control-label">
-            <span class="icon">🌓</span>
-            <span>遮罩透明度</span>
+            <span data-i18n="opacity">遮罩透明度</span>
             <span id="opacityValue" class="value-display">60%</span>
           </div>
           <input
             type="range"
             id="opacitySlider"
             min="0"
-            max="80"
+            max="100"
             value="60"
             class="slider-input"
           />
         </div>
 
+        <!-- 动画速度选项 -->
+        <div class="control-item">
+          <div class="control-label">
+            <span data-i18n="animation">切换动画</span>
+            <span id="animationValue" class="value-display">流畅</span>
+          </div>
+          <select id="animationSelect" class="delay-select">
+            <option value="0">无</option>
+            <option value="200">快</option>
+            <option value="300">中</option>
+            <option value="500">慢</option>
+          </select>
+        </div>
+
         <!-- 开机自启动 -->
         <div class="control-item">
           <div class="control-label">
-            <span class="icon">🚀</span>
-            <span>开机自启动</span>
+            <span data-i18n="autoStart">开机自启动</span>
           </div>
           <label class="switch">
             <input type="checkbox" id="autoStartToggle" />
             <span class="slider"></span>
           </label>
         </div>
+
+        <!-- 语言选择 -->
+        <div class="control-item">
+          <div class="control-label">
+            <span data-i18n="language">语言</span>
+          </div>
+          <select id="languageSelect" class="delay-select">
+            <option value="zh">中文</option>
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
       </section>
 
       <!-- 底部信息 -->
       <footer>
-        <p class="info-text">
+        <p class="info-text" data-i18n="footerInfo">
           当鼠标移至某一显示器时，其他显示器将自动显示遮罩
         </p>
       </footer>
     </div>
 
-    <script type="module" src="main.js"></script>
+    <script src="i18n.js"></script>
+    <script src="main.js"></script>
   </body>
 </html>
-

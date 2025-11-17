@@ -1,21 +1,27 @@
 # Tauri
 src-tauri/target/
 src-tauri/WixTools/
+src-tauri/gen/
 
 # Node
 node_modules/
 dist/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
 
 # OS
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
 *.swp
 *.swo
+*~
+
+# IDE
+.idea/
+*.iml
 
 # Build
 *.exe
@@ -23,7 +29,28 @@ Thumbs.db
 *.deb
 *.AppImage
 *.msi
+*.rpm
+src-tauri/target/release/bundle/
 
-# Config
+# Config (runtime)
 config.json
+
+# Temporary files
+*.tmp
+*.temp
+
+# Rust
+Cargo.lock
+**/*.rs.bk
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
 

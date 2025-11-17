@@ -2,12 +2,13 @@ use crate::monitor::MonitorInfo;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize, Window, WindowBuilder};
+use tauri::{AppHandle, Window, WindowBuilder};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OverlayConfig {
-    pub opacity: f32, // 0.0 - 0.8
+    pub opacity: f32, // 0.0 - 1.0 (0% - 100%)
     pub enabled: bool,
+    pub animation_duration: u64, // 动画时长（毫秒），0 表示无动画
 }
 
 impl Default for OverlayConfig {
@@ -15,6 +16,7 @@ impl Default for OverlayConfig {
         Self {
             opacity: 0.6,
             enabled: true,
+            animation_duration: 300,
         }
     }
 }
@@ -64,16 +66,25 @@ impl OverlayManager {
             if monitor.id == active_monitor_id {
                 // 隐藏活跃显示器的遮罩
                 if let Some(window) = overlays.get(&monitor.id) {
+                    self.emit_overlay_event(window, "overlay-hide");
                     let _ = window.hide();
                 }
             } else {
                 // 显示或创建非活跃显示器的遮罩
                 if let Some(window) = overlays.get(&monitor.id) {
+                    // 先发送配置
+                    self.send_overlay_config(window, &config);
+                    // 发送显示事件
+                    self.emit_overlay_event(window, "overlay-show");
+                    // 显示窗口
                     let _ = window.show();
-                    self.update_overlay_opacity(window, config.opacity);
                 } else {
-                    // 创建新遮罩
-                    if let Ok(window) = self.create_overlay(monitor, config.opacity) {
+                    // 创建新遮罩（创建时默认隐藏）
+                    if let Ok(window) = self.create_overlay(monitor, &config) {
+                        // 发送显示事件并显示窗口
+                        self.emit_overlay_event(&window, "overlay-show");
+                        let _ = window.show();
+                        
                         overlays.insert(monitor.id.clone(), window);
                     }
                 }
@@ -82,7 +93,7 @@ impl OverlayManager {
     }
 
     /// 创建遮罩窗口
-    fn create_overlay(&self, monitor: &MonitorInfo, opacity: f32) -> Result<Window, tauri::Error> {
+    fn create_overlay(&self, monitor: &MonitorInfo, config: &OverlayConfig) -> Result<Window, tauri::Error> {
         let label = format!("overlay_{}", monitor.id);
         
         let window = WindowBuilder::new(
@@ -96,6 +107,7 @@ impl OverlayManager {
         .skip_taskbar(true)
         .always_on_top(true)
         .transparent(true)
+        .visible(false) // 创建时默认隐藏，避免闪烁
         .position(monitor.x as f64, monitor.y as f64)
         .inner_size(monitor.width as f64, monitor.height as f64)
         .build()?;
@@ -110,19 +122,20 @@ impl OverlayManager {
         #[cfg(target_os = "linux")]
         self.set_click_through_linux(&window)?;
 
-        // 设置透明度
-        self.update_overlay_opacity(&window, opacity);
+        // 发送初始配置
+        self.send_overlay_config(&window, config);
 
         Ok(window)
     }
 
-    /// 更新遮罩透明度
-    fn update_overlay_opacity(&self, window: &Window, opacity: f32) {
-        let js = format!(
-            "document.body.style.backgroundColor = 'rgba(0, 0, 0, {})'",
-            opacity
-        );
-        let _ = window.eval(&js);
+    /// 发送配置到遮罩窗口
+    fn send_overlay_config(&self, window: &Window, config: &OverlayConfig) {
+        let _ = window.emit("overlay-config-update", config);
+    }
+
+    /// 发送事件到遮罩窗口
+    fn emit_overlay_event(&self, window: &Window, event: &str) {
+        let _ = window.emit(event, ());
     }
 
     /// 隐藏所有遮罩
@@ -139,9 +152,11 @@ impl OverlayManager {
         let overlays = self.overlays.lock().unwrap();
         
         for window in overlays.values() {
+            // 发送配置更新
+            self.send_overlay_config(window, &config);
+            
             if config.enabled {
                 let _ = window.show();
-                self.update_overlay_opacity(window, config.opacity);
             } else {
                 let _ = window.hide();
             }
