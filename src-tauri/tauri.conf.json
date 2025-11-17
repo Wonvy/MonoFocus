@@ -53,7 +53,7 @@
             "Spanish"
           ],
           "displayLanguageSelector": true,
-          "installerMode": "perMachine"
+          "installerIcon": "icons/icon.ico"
         }
       }
     },
