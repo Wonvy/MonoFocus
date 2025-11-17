@@ -140,6 +140,13 @@ fn main() {
     let current_monitor_id = Arc::new(Mutex::new(None));
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            // 当尝试启动第二个实例时，显示主窗口
+            if let Some(window) = app.get_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .system_tray(tray::create_tray())
         .on_system_tray_event(tray::handle_tray_event)
         .setup(move |app| {
