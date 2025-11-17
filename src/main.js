@@ -300,6 +300,51 @@ window.addEventListener("DOMContentLoaded", async () => {
         enabledToggle.checked = !enabledToggle.checked;
       }
     });
+
+    // 监听检查更新事件（从托盘触发）
+    listen("check-update", async () => {
+      try {
+        const { checkUpdate, installUpdate } = window.__TAURI__.updater;
+        const update = await checkUpdate();
+        
+        if (update.shouldUpdate) {
+          const msg = window.i18n.currentLang === 'zh' 
+            ? `发现新版本 ${update.manifest.version}！\n\n更新内容：\n${update.manifest.body}\n\n是否立即下载并安装？`
+            : `New version ${update.manifest.version} available!\n\n${update.manifest.body}\n\nDownload and install now?`;
+          
+          const { ask } = window.__TAURI__.dialog;
+          const yes = await ask(msg, { 
+            title: window.i18n.currentLang === 'zh' ? '发现新版本' : 'Update Available',
+            type: 'info'
+          });
+          
+          if (yes) {
+            await installUpdate();
+            const { relaunch } = window.__TAURI__.process;
+            await relaunch();
+          }
+        } else {
+          const { message } = window.__TAURI__.dialog;
+          const msg = window.i18n.currentLang === 'zh' 
+            ? '当前已是最新版本！' 
+            : 'You are using the latest version!';
+          await message(msg, { 
+            title: window.i18n.currentLang === 'zh' ? '检查更新' : 'Check Updates',
+            type: 'info'
+          });
+        }
+      } catch (error) {
+        console.error("检查更新失败:", error);
+        const { message } = window.__TAURI__.dialog;
+        const msg = window.i18n.currentLang === 'zh' 
+          ? `检查更新失败：${error}` 
+          : `Failed to check updates: ${error}`;
+        await message(msg, { 
+          title: window.i18n.currentLang === 'zh' ? '错误' : 'Error',
+          type: 'error'
+        });
+      }
+    });
   }
 
   // 启动应用
