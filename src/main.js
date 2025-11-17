@@ -336,12 +336,28 @@ window.addEventListener("DOMContentLoaded", async () => {
       } catch (error) {
         console.error("检查更新失败:", error);
         const { message } = window.__TAURI__.dialog;
-        const msg = window.i18n.currentLang === 'zh' 
-          ? `检查更新失败：${error}` 
-          : `Failed to check updates: ${error}`;
-        await message(msg, { 
-          title: window.i18n.currentLang === 'zh' ? '错误' : 'Error',
-          type: 'error'
+        
+        // 判断错误类型，提供更友好的提示
+        let errorMsg;
+        const errorStr = error.toString();
+        
+        if (errorStr.includes('Network Error') || errorStr.includes('404')) {
+          errorMsg = window.i18n.currentLang === 'zh' 
+            ? '无法连接到更新服务器。\n\n可能原因：\n1. 网络连接问题\n2. 更新服务器暂时不可用\n3. 还没有发布新版本\n\n请稍后重试或访问 GitHub Releases 页面手动下载。' 
+            : 'Cannot connect to update server.\n\nPossible reasons:\n1. Network connection issue\n2. Update server temporarily unavailable\n3. No new version released yet\n\nPlease try again later or visit GitHub Releases page.';
+        } else if (errorStr.includes('control character')) {
+          errorMsg = window.i18n.currentLang === 'zh' 
+            ? '更新配置文件格式错误。\n\n这通常是因为新版本正在构建中。\n请稍后再试，或访问 GitHub 查看发布状态。' 
+            : 'Update manifest format error.\n\nThis usually means a new version is being built.\nPlease try again later or check GitHub for release status.';
+        } else {
+          errorMsg = window.i18n.currentLang === 'zh' 
+            ? `检查更新失败：${error}\n\n请访问 GitHub Releases 页面查看最新版本。` 
+            : `Failed to check updates: ${error}\n\nPlease visit GitHub Releases page for the latest version.`;
+        }
+        
+        await message(errorMsg, { 
+          title: window.i18n.currentLang === 'zh' ? '检查更新失败' : 'Update Check Failed',
+          type: 'warning'
         });
       }
     });
