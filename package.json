@@ -7,7 +7,9 @@
     "tauri": "tauri",
     "dev": "tauri dev",
     "build": "tauri build",
-    "format": "prettier --write src/**/*.{js,html,css}"
+    "format": "prettier --write src/**/*.{js,html,css}",
+    "version": "node scripts/update-version.js",
+    "postversion": "git add -A && git commit -m \"chore: update version to $npm_package_version\" && git tag v$npm_package_version && git push && git push --tags"
   },
   "keywords": [
     "tauri",
