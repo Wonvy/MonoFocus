@@ -1,10 +1,10 @@
 [package]
 name = "monofocus"
-version = "1.1.1"
+version = "1.2.0"
 description = "跨平台多显示器护眼与专注工具"
 authors = ["MonoFocus Team"]
 license = "MIT"
-repository = "https://github.com/yourusername/MonoFocus"
+repository = "https://github.com/Wonvy/MonoFocus"
 edition = "2021"
 
 [build-dependencies]
