@@ -249,6 +249,15 @@ footer {
   color: #999999;
   line-height: 1.6;
   font-weight: 400;
+  margin-bottom: 4px;
+}
+
+.version-text {
+  text-align: center;
+  font-size: 11px;
+  color: #cccccc;
+  margin: 0;
+  font-weight: 500;
 }
 
 /* 响应式 */
