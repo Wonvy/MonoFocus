@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MonoFocus</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- 顶部标题 -->
+      <header>
+        <h1>MonoFocus</h1>
+        <p class="subtitle">多显示器护眼与专注工具</p>
+      </header>
+
+      <!-- 显示器布局可视化 -->
+      <section class="monitor-section">
+        <canvas id="monitorCanvas" width="460" height="200"></canvas>
+        <div id="monitorStatus" class="status-text">检测中...</div>
+      </section>
+
+      <!-- 控制面板 -->
+      <section class="control-panel">
+        <!-- 护眼模式开关 -->
+        <div class="control-item">
+          <div class="control-label">
+            <span class="icon">👁️</span>
+            <span>护眼模式</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="enabledToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- 透明度滑条 -->
+        <div class="control-item">
+          <div class="control-label">
+            <span class="icon">🌓</span>
+            <span>遮罩透明度</span>
+            <span id="opacityValue" class="value-display">60%</span>
+          </div>
+          <input
+            type="range"
+            id="opacitySlider"
+            min="0"
+            max="80"
+            value="60"
+            class="slider-input"
+          />
+        </div>
+
+        <!-- 开机自启动 -->
+        <div class="control-item">
+          <div class="control-label">
+            <span class="icon">🚀</span>
+            <span>开机自启动</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="autoStartToggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- 底部信息 -->
+      <footer>
+        <p class="info-text">
+          当鼠标移至某一显示器时，其他显示器将自动显示遮罩
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
+

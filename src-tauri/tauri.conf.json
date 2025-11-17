@@ -1,0 +1,64 @@
+{
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "../src",
+    "distDir": "../src",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "MonoFocus",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "window": {
+        "all": false,
+        "create": true,
+        "center": true,
+        "setAlwaysOnTop": true,
+        "setDecorations": true,
+        "setIgnoreCursorEvents": true,
+        "setPosition": true,
+        "setSize": true,
+        "show": true,
+        "hide": true,
+        "close": true,
+        "startDragging": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.monofocus.app",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "resizable": true,
+        "title": "MonoFocus",
+        "width": 500,
+        "height": 400,
+        "center": true,
+        "decorations": true,
+        "transparent": false
+      }
+    ],
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    }
+  }
+}
+

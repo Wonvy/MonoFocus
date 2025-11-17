@@ -1,0 +1,29 @@
+{
+  "name": "monofocus",
+  "version": "1.0.0",
+  "description": "跨平台多显示器护眼与专注工具",
+  "main": "index.js",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "format": "prettier --write src/**/*.{js,html,css}"
+  },
+  "keywords": [
+    "tauri",
+    "rust",
+    "multi-monitor",
+    "eye-care",
+    "productivity"
+  ],
+  "author": "MonoFocus Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.0",
+    "prettier": "^3.0.0"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.0"
+  }
+}
+

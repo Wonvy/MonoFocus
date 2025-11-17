@@ -1,0 +1,38 @@
+[package]
+name = "monofocus"
+version = "1.0.0"
+description = "跨平台多显示器护眼与专注工具"
+authors = ["MonoFocus Team"]
+license = "MIT"
+repository = "https://github.com/yourusername/MonoFocus"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "1.5", features = ["system-tray", "window-all", "window-create", "window-set-always-on-top", "window-set-decorations", "window-set-ignore-cursor-events", "window-set-position", "window-set-size", "window-start-dragging"] }
+tauri-plugin-store = { git = "https://github.com/tauri-apps/tauri-plugin-store", branch = "v1" }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.51", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_LibraryLoader",
+] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.25"
+objc = "0.2"
+core-graphics = "0.23"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11 = { version = "2.21", features = ["xlib", "xrandr"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
