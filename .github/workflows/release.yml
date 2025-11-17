@@ -53,8 +53,6 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ steps.get_version.outputs.VERSION }}"
-          
-          # 读取 CHANGELOG 的第一个版本说明作为更新内容（简化处理，避免多行问题）
           NOTES="New version ${VERSION} available"
           
           # Windows 平台
@@ -63,30 +61,41 @@ jobs:
             NSIS_NAME=$(basename "$NSIS_FILE")
             NSIS_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/${NSIS_NAME}"
             
-            # 查找签名文件
+            echo "Looking for signature file: ${NSIS_FILE}.sig"
+            ls -la src-tauri/target/release/bundle/nsis/ || true
+            
+            # 查找签名文件并安全读取
             if [ -f "${NSIS_FILE}.sig" ]; then
-              SIGNATURE=$(cat "${NSIS_FILE}.sig")
+              SIGNATURE=$(cat "${NSIS_FILE}.sig" | tr -d '\n\r')
+              echo "Found signature file"
             else
               SIGNATURE=""
+              echo "No signature file found"
             fi
             
-            # 生成 JSON（注意不要有多余缩进）
-            cat > latest.json <<EOF
-{
-  "version": "${VERSION}",
-  "notes": "${NOTES}",
-  "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "platforms": {
-    "windows-x86_64": {
-      "signature": "${SIGNATURE}",
-      "url": "${NSIS_URL}"
+            # 使用 Python 生成 JSON 以避免转义问题
+            python3 << PYTHON
+import json
+from datetime import datetime
+
+data = {
+    "version": "${VERSION}",
+    "notes": "${NOTES}",
+    "pub_date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "platforms": {
+        "windows-x86_64": {
+            "signature": "${SIGNATURE}",
+            "url": "${NSIS_URL}"
+        }
     }
-  }
 }
-EOF
-            
-            echo "Generated latest.json:"
-            cat latest.json
+
+with open("latest.json", "w") as f:
+    json.dump(data, f, indent=2)
+
+print("Generated latest.json:")
+print(json.dumps(data, indent=2))
+PYTHON
           fi
 
       - name: Create Release
