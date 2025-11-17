@@ -27,13 +27,8 @@ https://github.com/Wonvy/MonoFocus/settings/secrets/actions
 dW50cnVzdGVkIGNvbW1lbnQ6IHJzaWduIGVuY3J5cHRlZCBzZWNyZXQga2V5ClJXUlRZMEl5YXVRQWF0VTZqOXNFZVRQMEx2MjFFd3dlYkpZOTdUZG5vNkQ3aEhiWUNJZ0FBQkFBQUFBQUFBQUFBQUlBQUFBQWZBZTNOSkF6YVE2UnBOcDY0K0ExM0JWR3VpUkE2V1dSRTFYd0NhTTBORnZnM3BPZktTWWhPdE9VTnY5YnBHNERLRVhFdllOb3pmbnhoNktkOGJCWjdOMis1cVJrS3lPSmpPQ3ExeEVHYUxaVWtxTFp0RmlQZ2JOU3JZV01CdURIZnRVVEdNaWxIQUE9Cg==
 ```
 
-### 3. 添加 TAURI_KEY_PASSWORD
-
-点击 **New repository secret**，配置：
-- **Name**: `TAURI_KEY_PASSWORD`
-- **Value**: （留空，因为生成密钥时没有设置密码）
-
-> **重要提示**: 如果你在生成密钥时设置了密码，请在这里填写该密码。
+> **注意**: 由于生成密钥时没有设置密码，所以不需要添加 `TAURI_KEY_PASSWORD` Secret。
+> 如果将来需要使用带密码的密钥，可以添加 `TAURI_KEY_PASSWORD` Secret 并在 GitHub Actions 中配置。
 
 ### 4. 保存私钥备份
 
