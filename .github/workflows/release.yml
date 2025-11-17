@@ -54,29 +54,39 @@ jobs:
         run: |
           VERSION="${{ steps.get_version.outputs.VERSION }}"
           
-          # 读取 CHANGELOG 的第一个版本说明作为更新内容
-          NOTES=$(awk '/^## \[/{if(found) exit; found=1; next} found' CHANGELOG.md)
+          # 读取 CHANGELOG 的第一个版本说明作为更新内容（简化处理，避免多行问题）
+          NOTES="New version ${VERSION} available"
           
           # Windows 平台
           if [ "${{ matrix.platform }}" == "windows-latest" ]; then
             NSIS_FILE=$(ls src-tauri/target/release/bundle/nsis/*.exe | head -1)
             NSIS_NAME=$(basename "$NSIS_FILE")
             NSIS_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/${NSIS_NAME}"
-            NSIS_SIG="${NSIS_FILE}.sig"
             
+            # 查找签名文件
+            if [ -f "${NSIS_FILE}.sig" ]; then
+              SIGNATURE=$(cat "${NSIS_FILE}.sig")
+            else
+              SIGNATURE=""
+            fi
+            
+            # 生成 JSON（注意不要有多余缩进）
             cat > latest.json <<EOF
-          {
-            "version": "${VERSION}",
-            "notes": "${NOTES}",
-            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "platforms": {
-              "windows-x86_64": {
-                "signature": "$(cat ${NSIS_SIG} 2>/dev/null || echo '')",
-                "url": "${NSIS_URL}"
-              }
-            }
-          }
-          EOF
+{
+  "version": "${VERSION}",
+  "notes": "${NOTES}",
+  "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "${SIGNATURE}",
+      "url": "${NSIS_URL}"
+    }
+  }
+}
+EOF
+            
+            echo "Generated latest.json:"
+            cat latest.json
           fi
 
       - name: Create Release
