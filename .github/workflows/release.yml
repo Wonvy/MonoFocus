@@ -74,28 +74,28 @@ jobs:
             fi
             
             # 使用 Python 生成 JSON 以避免转义问题
-            python3 << PYTHON
+            python3 -c "
 import json
 from datetime import datetime
 
 data = {
-    "version": "${VERSION}",
-    "notes": "${NOTES}",
-    "pub_date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-    "platforms": {
-        "windows-x86_64": {
-            "signature": "${SIGNATURE}",
-            "url": "${NSIS_URL}"
+    'version': '${VERSION}',
+    'notes': '${NOTES}',
+    'pub_date': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+    'platforms': {
+        'windows-x86_64': {
+            'signature': '${SIGNATURE}',
+            'url': '${NSIS_URL}'
         }
     }
 }
 
-with open("latest.json", "w") as f:
+with open('latest.json', 'w') as f:
     json.dump(data, f, indent=2)
 
-print("Generated latest.json:")
+print('Generated latest.json:')
 print(json.dumps(data, indent=2))
-PYTHON
+"
           fi
 
       - name: Create Release
