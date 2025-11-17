@@ -50,53 +50,46 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Generate update manifest
-        shell: bash
+        shell: pwsh
         run: |
-          VERSION="${{ steps.get_version.outputs.VERSION }}"
-          NOTES="New version ${VERSION} available"
+          $VERSION = "${{ steps.get_version.outputs.VERSION }}"
+          $NOTES = "New version $VERSION available"
           
-          # Windows 平台
-          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
-            NSIS_FILE=$(ls src-tauri/target/release/bundle/nsis/*.exe | head -1)
-            NSIS_NAME=$(basename "$NSIS_FILE")
-            NSIS_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/${NSIS_NAME}"
+          if ("${{ matrix.platform }}" -eq "windows-latest") {
+            $NSIS_FILE = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis/*.exe" | Select-Object -First 1
+            $NSIS_NAME = $NSIS_FILE.Name
+            $NSIS_URL = "https://github.com/${{ github.repository }}/releases/download/$VERSION/$NSIS_NAME"
             
-            echo "Looking for signature file: ${NSIS_FILE}.sig"
-            ls -la src-tauri/target/release/bundle/nsis/ || true
+            Write-Host "Looking for: $($NSIS_FILE.FullName).sig"
             
-            # 查找签名文件并安全读取
-            if [ -f "${NSIS_FILE}.sig" ]; then
-              SIGNATURE=$(cat "${NSIS_FILE}.sig" | tr -d '\n\r')
-              echo "Found signature file"
-            else
-              SIGNATURE=""
-              echo "No signature file found"
-            fi
+            # 查找签名文件
+            $SIG_FILE = "$($NSIS_FILE.FullName).sig"
+            if (Test-Path $SIG_FILE) {
+              $SIGNATURE = Get-Content $SIG_FILE -Raw
+              $SIGNATURE = $SIGNATURE.Trim()
+              Write-Host "Found signature"
+            } else {
+              $SIGNATURE = ""
+              Write-Host "No signature file"
+            }
             
-            # 使用 Python 生成 JSON 以避免转义问题
-            python3 -c "
-import json
-from datetime import datetime
-
-data = {
-    'version': '${VERSION}',
-    'notes': '${NOTES}',
-    'pub_date': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-    'platforms': {
-        'windows-x86_64': {
-            'signature': '${SIGNATURE}',
-            'url': '${NSIS_URL}'
-        }
-    }
-}
-
-with open('latest.json', 'w') as f:
-    json.dump(data, f, indent=2)
-
-print('Generated latest.json:')
-print(json.dumps(data, indent=2))
-"
-          fi
+            # 生成 JSON
+            $manifest = @{
+              version = $VERSION
+              notes = $NOTES
+              pub_date = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+              platforms = @{
+                "windows-x86_64" = @{
+                  signature = $SIGNATURE
+                  url = $NSIS_URL
+                }
+              }
+            }
+            
+            $manifest | ConvertTo-Json -Depth 10 | Set-Content -Path "latest.json"
+            Write-Host "Generated latest.json:"
+            Get-Content "latest.json"
+          }
 
       - name: Create Release
         id: create_release
