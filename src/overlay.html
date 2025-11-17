@@ -21,92 +21,9 @@
       body {
         background-color: rgba(0, 0, 0, 0.6);
         pointer-events: none;
-        opacity: 1 !important;
-        transition: none !important;
-        animation: none !important;
-      }
-
-      body.with-animation {
-        transition: opacity 0.3s ease-in-out !important;
-      }
-
-      body.with-animation.fade-out {
-        opacity: 0 !important;
+        transition: none;
       }
     </style>
   </head>
-  <body>
-    <script>
-      // 等待 Tauri API 加载
-      (async function () {
-        function waitForTauri() {
-          return new Promise((resolve) => {
-            if (window.__TAURI__) {
-              resolve();
-            } else {
-              const interval = setInterval(() => {
-                if (window.__TAURI__) {
-                  clearInterval(interval);
-                  resolve();
-                }
-              }, 50);
-            }
-          });
-        }
-
-        await waitForTauri();
-
-        const { appWindow } = window.__TAURI__.window;
-        const { listen } = window.__TAURI__.event;
-
-        let animationDuration = 0; // 默认无动画
-
-        // 监听自定义配置更新事件
-        await listen("overlay-config-update", (event) => {
-          const config = event.payload;
-
-          // 更新透明度
-          if (config.opacity !== undefined) {
-            document.body.style.backgroundColor = `rgba(0, 0, 0, ${config.opacity})`;
-          }
-
-          // 更新动画时长
-          if (config.animation_duration !== undefined) {
-            animationDuration = config.animation_duration;
-            if (animationDuration === 0) {
-              document.body.classList.remove("with-animation");
-              document.body.style.transition = "none";
-            } else {
-              document.body.classList.add("with-animation");
-              document.body.style.transition = `opacity ${animationDuration}ms ease-in-out`;
-            }
-          }
-        });
-
-        // 监听显示命令
-        await listen("overlay-show", async () => {
-          if (animationDuration === 0) {
-            // 无动画：直接显示
-            document.body.classList.remove("fade-out");
-          } else {
-            // 有动画：先移除 fade-out 类，触发淡入效果
-            document.body.classList.remove("fade-out");
-          }
-        });
-
-        // 监听隐藏命令
-        await listen("overlay-hide", async () => {
-          if (animationDuration === 0) {
-            // 无动画：不需要任何操作（窗口会被后端 hide）
-          } else {
-            // 有动画：添加 fade-out 类，触发淡出效果
-            document.body.classList.add("fade-out");
-          }
-        });
-
-        // 初始化：默认完全显示（由后端控制窗口的显示/隐藏）
-        document.body.classList.remove("fade-out");
-      })();
-    </script>
-  </body>
+  <body></body>
 </html>

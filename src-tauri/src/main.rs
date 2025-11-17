@@ -9,7 +9,7 @@ mod tray;
 
 use config::{AppConfig, ConfigManager};
 use monitor::{get_monitors, normalize_layout, MonitorInfo, UIRect};
-use mouse_watcher::start_mouse_watcher;
+use mouse_watcher::{start_mouse_watcher, get_mouse_position, find_monitor_at_position};
 use overlay::{OverlayConfig, OverlayManager};
 use std::sync::{Arc, Mutex};
 use tauri::{Manager, State};
@@ -112,10 +112,12 @@ fn update_animation_duration(duration: u64, state: State<AppState>) -> Result<()
 #[tauri::command]
 fn update_language(language: String, state: State<AppState>, app: tauri::AppHandle) -> Result<(), String> {
     let manager = state.config_manager.lock().unwrap();
-    let config = manager.load();
     manager
         .update_language(language.clone())
         .map_err(|e| e.to_string())?;
+    
+    // 重新加载配置以获取最新的 enabled 状态
+    let config = manager.load();
     
     // 更新托盘菜单语言
     tray::update_tray_menu_text(&app, config.enabled, &language);
@@ -163,6 +165,22 @@ fn main() {
                 overlay_manager: overlay_manager.clone(),
                 current_monitor_id: current_monitor_id.clone(),
             });
+
+            // 初始化遮罩：根据当前鼠标位置设置初始状态
+            let monitors = get_monitors();
+            if let Some(mouse_pos) = get_mouse_position() {
+                if let Some(initial_monitor_id) = find_monitor_at_position(&monitors, mouse_pos) {
+                    // 设置初始显示器 ID
+                    {
+                        let mut current = current_monitor_id.lock().unwrap();
+                        *current = Some(initial_monitor_id.clone());
+                    }
+                    // 初始化遮罩状态
+                    if let Some(manager) = overlay_manager.lock().unwrap().as_ref() {
+                        manager.update_overlays(&monitors, &initial_monitor_id);
+                    }
+                }
+            }
 
             // 启动鼠标监听
             let app_handle = app.handle();

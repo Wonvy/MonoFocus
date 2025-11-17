@@ -54,7 +54,7 @@ impl OverlayManager {
     /// 更新遮罩显示（根据当前活跃的显示器）
     pub fn update_overlays(&self, monitors: &[MonitorInfo], active_monitor_id: &str) {
         let config = self.config.lock().unwrap().clone();
-        
+
         if !config.enabled {
             self.hide_all_overlays();
             return;
@@ -63,39 +63,31 @@ impl OverlayManager {
         let mut overlays = self.overlays.lock().unwrap();
 
         for monitor in monitors {
-            if monitor.id == active_monitor_id {
-                // 隐藏活跃显示器的遮罩
-                if let Some(window) = overlays.get(&monitor.id) {
-                    self.emit_overlay_event(window, "overlay-hide");
-                    let _ = window.hide();
+            // 确保每个显示器都有窗口（如果不存在就创建）
+            if !overlays.contains_key(&monitor.id) {
+                if let Ok(window) = self.create_overlay(monitor, &config) {
+                    overlays.insert(monitor.id.clone(), window);
                 }
-            } else {
-                // 显示或创建非活跃显示器的遮罩
-                if let Some(window) = overlays.get(&monitor.id) {
-                    // 先发送配置
-                    self.send_overlay_config(window, &config);
-                    // 发送显示事件
-                    self.emit_overlay_event(window, "overlay-show");
-                    // 显示窗口
-                    let _ = window.show();
+            }
+
+            // 根据是否是活跃显示器来显示/隐藏
+            if let Some(window) = overlays.get(&monitor.id) {
+                if monitor.id == active_monitor_id {
+                    // 隐藏活跃显示器的遮罩
+                    self.emit_overlay_event(window, "overlay-hide");
                 } else {
-                    // 创建新遮罩（创建时默认隐藏）
-                    if let Ok(window) = self.create_overlay(monitor, &config) {
-                        // 发送显示事件并显示窗口
-                        self.emit_overlay_event(&window, "overlay-show");
-                        let _ = window.show();
-                        
-                        overlays.insert(monitor.id.clone(), window);
-                    }
+                    // 显示非活跃显示器的遮罩
+                    self.send_overlay_config(window, &config);
+                    self.emit_overlay_event(window, "overlay-show");
                 }
             }
         }
     }
 
     /// 创建遮罩窗口
-    fn create_overlay(&self, monitor: &MonitorInfo, config: &OverlayConfig) -> Result<Window, tauri::Error> {
+    fn create_overlay(&self, monitor: &MonitorInfo, _config: &OverlayConfig) -> Result<Window, tauri::Error> {
         let label = format!("overlay_{}", monitor.id);
-        
+
         let window = WindowBuilder::new(
             &self.app,
             label.clone(),
@@ -107,7 +99,7 @@ impl OverlayManager {
         .skip_taskbar(true)
         .always_on_top(true)
         .transparent(true)
-        .visible(false) // 创建时默认隐藏，避免闪烁
+        .visible(true) // 创建时可见，通过CSS控制显示/隐藏
         .position(monitor.x as f64, monitor.y as f64)
         .inner_size(monitor.width as f64, monitor.height as f64)
         .build()?;
@@ -122,27 +114,44 @@ impl OverlayManager {
         #[cfg(target_os = "linux")]
         self.set_click_through_linux(&window)?;
 
-        // 发送初始配置
-        self.send_overlay_config(&window, config);
+        // 等待页面加载完成
+        std::thread::sleep(std::time::Duration::from_millis(100));
 
         Ok(window)
     }
 
-    /// 发送配置到遮罩窗口
+    /// 发送配置到遮罩窗口（设置动画）
     fn send_overlay_config(&self, window: &Window, config: &OverlayConfig) {
-        let _ = window.emit("overlay-config-update", config);
+        let animation = config.animation_duration;
+        let script = if animation == 0 {
+            "document.body.style.transition = 'none';".to_string()
+        } else {
+            format!("document.body.style.transition = 'background-color {}ms ease-in-out';", animation)
+        };
+        let _ = window.eval(&script);
     }
 
-    /// 发送事件到遮罩窗口
+    /// 发送事件到遮罩窗口（直接设置样式）
     fn emit_overlay_event(&self, window: &Window, event: &str) {
-        let _ = window.emit(event, ());
+        let script = match event {
+            "overlay-show" => {
+                let opacity = self.config.lock().unwrap().opacity;
+                format!("document.body.style.backgroundColor = 'rgba(0, 0, 0, {})';", opacity)
+            },
+            "overlay-hide" => {
+                "document.body.style.backgroundColor = 'transparent';".to_string()
+            },
+            _ => return,
+        };
+        let _ = window.eval(&script);
     }
 
     /// 隐藏所有遮罩
     pub fn hide_all_overlays(&self) {
         let overlays = self.overlays.lock().unwrap();
         for window in overlays.values() {
-            let _ = window.hide();
+            // 发送隐藏事件
+            self.emit_overlay_event(window, "overlay-hide");
         }
     }
 
@@ -156,14 +165,17 @@ impl OverlayManager {
             self.send_overlay_config(window, &config);
             
             if config.enabled {
-                let _ = window.show();
+                // 发送显示事件
+                self.emit_overlay_event(window, "overlay-show");
             } else {
-                let _ = window.hide();
+                // 发送隐藏事件
+                self.emit_overlay_event(window, "overlay-hide");
             }
         }
     }
 
-    /// 清理所有遮罩
+    /// 清理所有遮罩（程序退出时使用）
+    #[allow(dead_code)]
     pub fn cleanup(&self) {
         let mut overlays = self.overlays.lock().unwrap();
         for (_, window) in overlays.drain() {

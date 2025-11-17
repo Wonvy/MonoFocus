@@ -48,18 +48,30 @@ window.addEventListener("DOMContentLoaded", async () => {
     try {
       // 加载配置
       const config = await invoke("get_config");
-      opacitySlider.value = config.opacity * 100;
-      opacityValue.textContent = `${Math.round(config.opacity * 100)}%`;
-      enabledToggle.checked = config.enabled;
-      autoStartToggle.checked = config.auto_start;
-      animationSelect.value = config.animation_duration || 300;
-      updateAnimationText(config.animation_duration || 300);
+      console.log("加载的配置:", config);
 
-      // 应用语言设置
+      // 先应用语言设置（确保翻译可用）
       const lang = config.language || "zh";
       window.i18n.currentLang = lang;
       window.i18n.applyTranslations(lang);
       languageSelect.value = lang;
+
+      // 然后设置其他配置
+      opacitySlider.value = config.opacity * 100;
+      opacityValue.textContent = `${Math.round(config.opacity * 100)}%`;
+      enabledToggle.checked = config.enabled;
+      autoStartToggle.checked = config.auto_start;
+
+      // 设置动画选择器的值
+      const animDuration = config.animation_duration || 0;
+      animationSelect.value = animDuration.toString();
+      updateAnimationText(animDuration);
+      console.log(
+        "动画时长设置为:",
+        animDuration,
+        "选择器值:",
+        animationSelect.value
+      );
 
       // 加载显示器信息
       await loadMonitors();
