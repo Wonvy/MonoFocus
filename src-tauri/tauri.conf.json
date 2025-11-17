@@ -44,8 +44,16 @@
           "language": "zh-CN"
         },
         "nsis": {
-          "languages": ["SimpChinese", "English", "Japanese", "French", "German", "Spanish"],
-          "displayLanguageSelector": true
+          "languages": [
+            "SimpChinese",
+            "English",
+            "Japanese",
+            "French",
+            "German",
+            "Spanish"
+          ],
+          "displayLanguageSelector": true,
+          "installerMode": "perMachine"
         }
       }
     },
